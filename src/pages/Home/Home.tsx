@@ -40,7 +40,7 @@ function Home() {
     const itemsPerPage = 6;
 
     const filteredMeals = selectedCategory
-        ? meals.filter((meal) => meal.strCategory === selectedCategory)
+        ? meals.filter((meal: { strCategory: string; }) => meal.strCategory === selectedCategory)
         : meals;
 
     const { currentItems, page, handlePageChange, totalPages } = usePagination(filteredMeals, itemsPerPage);
