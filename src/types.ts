@@ -13,3 +13,10 @@ export interface Meal {
     strMealThumb: string;
     strCategory: string;
 }
+export type RecipeCardProps = {
+    id: string
+    image: string;
+    name: string;
+    category: string;
+    area: string;
+};

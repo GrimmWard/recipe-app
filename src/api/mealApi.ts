@@ -16,7 +16,8 @@ export const fetchAllMeals = async ():Promise<Meal[]> => {
 export const searchMealById = async (id: string) => {
     const response = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
     if (!response.ok) throw new Error("Failed to fetch meals");
-    return response.json();
+    const data = await response.json();
+    return data.meals;
 };
 
 
