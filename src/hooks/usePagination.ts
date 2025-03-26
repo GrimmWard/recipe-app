@@ -1,27 +1,28 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import {useSearchParams} from "react-router-dom";
+import {Meal} from "../types.ts";
+import {useEffect} from "react";
 
-export const usePagination = (data: any[], itemsPerPage: number) => {
+export const usePagination = (data: Meal[], itemsPerPage: number) => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const pageFromUrl = Number(searchParams.get("page")) || 1;
 
+    useEffect(() => {
+        const maxPages = Math.ceil(data.length / itemsPerPage);
+        if (pageFromUrl > maxPages) {
+            setSearchParams({ page: "1" });
+        } else if (pageFromUrl <= 0) {
+            setSearchParams({ page: "1" });
+        }
+    }, [data.length, itemsPerPage, pageFromUrl, setSearchParams]);
 
-    const initialPage = Number(searchParams.get("page")) || 1;
-    const [page, setPage] = useState(initialPage);
-
-    const startIndex = (page - 1) * itemsPerPage;
+    const startIndex = (pageFromUrl - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentItems = data.slice(startIndex, endIndex);
     const totalPages = Math.ceil(data.length / itemsPerPage);
 
     const handlePageChange = (newPage: number) => {
-        setPage(newPage);
-        setSearchParams({ page: newPage.toString() });
+        setSearchParams({page: newPage.toString()});
     };
 
-    useEffect(() => {
-        const newPage = Number(searchParams.get("page")) || 1;
-        if (newPage !== page) setPage(newPage);
-    }, [searchParams]);
-
-    return { currentItems, page, handlePageChange, totalPages };
+    return {currentItems, page: pageFromUrl, handlePageChange, totalPages};
 };

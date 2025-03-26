@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {useMemo, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
 import {fetchAllMeals, fetchCategories, searchMeals} from "../../api/mealApi.ts";
 import RecipeCard from "../../components/RecipeCard.tsx";
 import "./Home.css";
@@ -13,8 +13,9 @@ import {
     SelectChangeEvent,
     TextField
 } from "@mui/material";
-import { usePagination } from "../../hooks/usePagination.ts";
+import {usePagination} from "../../hooks/usePagination.ts";
 import {useDebounce} from "../../hooks/useDebounce.ts";
+import {Meal} from "../../types.ts";
 
 
 function Home() {
@@ -26,27 +27,26 @@ function Home() {
     const { data: meals = [], isLoading, isError } = useQuery({
         queryKey: debouncedSearch ? ["searchMeals", debouncedSearch] : ["allMeals"],
         queryFn: () => (debouncedSearch ? searchMeals(debouncedSearch) : fetchAllMeals()),
-        staleTime: 100 * 60 * 10,
     });
 
-
-    const { data, isLoading: isCategoriesLoading } = useQuery({
+    const {data: categories = [], isLoading: isCategoriesLoading} = useQuery({
         queryKey: ["categories"],
         queryFn: fetchCategories,
-        staleTime: 100 * 60 * 10,
     });
-    const categories = data?.categories || [];
 
     const itemsPerPage = 6;
 
-    const filteredMeals = selectedCategory
-        ? meals.filter((meal: { strCategory: string; }) => meal.strCategory === selectedCategory)
-        : meals;
 
-    const { currentItems, page, handlePageChange, totalPages } = usePagination(filteredMeals, itemsPerPage);
+    const filteredMeals = useMemo(() =>
+            (meals ?? []).filter((meal: Meal) =>
+                selectedCategory ? meal.strCategory === selectedCategory : true
+            ),
+        [meals, selectedCategory]);
 
-    const handleCategoryChange = (event: SelectChangeEvent<string>) => {
-        setSelectedCategory(event.target.value as string);
+    const {currentItems, page, handlePageChange, totalPages} = usePagination(filteredMeals, itemsPerPage);
+
+    const handleCategoryChange = (event: SelectChangeEvent) => {
+        setSelectedCategory(event.target.value);
     };
 
     if (isLoading || isCategoriesLoading) return <p>Loading...</p>;
@@ -62,10 +62,10 @@ function Home() {
                 variant="outlined"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ marginBottom: "20px" }}
+                style={{marginBottom: "20px"}}
             />
 
-            <FormControl fullWidth style={{ marginBottom: "20px" }}>
+            <FormControl fullWidth style={{marginBottom: "20px"}}>
                 <InputLabel>Category</InputLabel>
                 <Select
                     value={selectedCategory}
@@ -73,8 +73,7 @@ function Home() {
                     onChange={handleCategoryChange}
                 >
                     <MenuItem value="">All Categories</MenuItem>
-                    {Array.isArray(categories) &&
-                        categories.map((category) => (
+                    {categories.map((category) => (
                         <MenuItem key={category.strCategory} value={category.strCategory}>
                             {category.strCategory}
                         </MenuItem>
@@ -99,7 +98,7 @@ function Home() {
                 )}
             </div>
 
-            <Stack spacing={2} alignItems="center" style={{ marginTop: "20px" }}>
+            <Stack spacing={2} alignItems="center" style={{marginTop: "20px"}}>
                 <Pagination
                     variant="outlined"
                     shape="rounded"
